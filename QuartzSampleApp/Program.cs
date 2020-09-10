@@ -21,8 +21,13 @@ namespace QuartzSampleApp
             await scheduler.Start();
 
             // define the job and tie it to our HelloJob class
-            IJobDetail job = JobBuilder.Create<HelloJob>()
-                .WithIdentity("job1", "group1")
+            //IJobDetail job = JobBuilder.Create<HelloJob>()
+            //    .WithIdentity("job1", "group1")
+            //    .Build();
+            IJobDetail job = JobBuilder.Create<DumbJob>()
+                .WithIdentity("myJob", "group1") // name "myJob", group "group1"
+                .UsingJobData("jobSays", "Hello World!")
+                .UsingJobData("myFloatValue", 3.141f)
                 .Build();
 
             // Trigger the job to run now, and then repeat every 10 seconds
@@ -84,6 +89,21 @@ namespace QuartzSampleApp
         public async Task Execute(IJobExecutionContext context)
         {
             await Console.Out.WriteLineAsync("The time is: " + DateTime.Now.TimeOfDay);
+        }
+    }
+
+    public class DumbJob : IJob
+    {
+        public async Task Execute(IJobExecutionContext context)
+        {
+            JobKey key = context.JobDetail.Key;
+
+            JobDataMap dataMap = context.MergedJobDataMap;
+
+            string jobSays = dataMap.GetString("jobSays");
+            float myFloatValue = dataMap.GetFloat("myFloatValue");
+
+            await Console.Error.WriteLineAsync("Instance " + key + " of DumbJob says: " + jobSays + ", and val is: " + myFloatValue);
         }
     }
 }
